@@ -8,31 +8,6 @@ PathEscape is an educational web application that simulates directory traversal 
 
 **Important**: This is a security education tool. The vulnerabilities are intentional for learning purposes.
 
-## Architecture
-
-The application uses a simple client-side architecture:
-
-- **Virtual File System**: Defined in `data/vfs.json`, simulates a filesystem structure with public and "secret" files
-- **Path Resolution**:
-  - `js/normalize.js`: Handles path normalization (resolves `..` segments)
-  - Vulnerable mode: No base directory checks (allows traversal)
-  - Safe mode: Enforces base directory restrictions at `/app/files/`
-- **UI Components**:
-  - File tree viewer (shows only `/app/files/` directory)
-  - Path input with Fetch button
-  - Output viewer for file contents
-  - Stage selector (Beginner/Intermediate/Advanced)
-  - Mode selector (Vulnerable/Safe)
-
-## Key Files
-
-- `index.html`: Main UI entry point
-- `js/script.js`: Core application logic, handles path resolution strategies and UI interactions
-- `js/vfs-loader.js`: Loads the virtual filesystem from JSON
-- `js/normalize.js`: Path normalization utilities
-- `data/vfs.json`: Virtual filesystem definition
-- `css/style.css`: Application styles
-
 ## Development Commands
 
 This is a static HTML/CSS/JavaScript application with no build process. To run locally:
@@ -45,27 +20,46 @@ python -m http.server 8000
 npx serve .
 ```
 
-The application is deployed to GitHub Pages at: https://ipusiron.github.io/path-escape/
+Open `http://localhost:8000` in a browser. The VFS must be loaded via HTTP (not file://), as it uses fetch().
 
-## Testing Approach
+Live demo: https://ipusiron.github.io/path-escape/
 
-Manual testing is the primary method. Test cases are documented in `tests/manual-checklist.md` and `tests/demo-cases.md`. Key test scenarios:
+## Architecture
 
-1. Basic file access within `/app/files/`
-2. Directory traversal attempts using `../`
-3. Filter bypass techniques in Intermediate/Advanced stages
-4. Mode switching between Vulnerable and Safe
-5. Hint system functionality
+### Module Dependencies
 
-## Path Resolution Behavior
+```
+vfs-loader.js → (loads) → data/vfs.json → window.VFS
+normalize.js  → (exports) → normalizePath()
+script.js     → (uses) → window.VFS, normalizePath()
+```
 
-The application intentionally demonstrates both vulnerable and safe path resolution:
+`script.js` waits for the `vfs:loaded` custom event before initializing the file tree and fetch handlers.
 
-- **Base directory**: `/app/files/`
-- **Vulnerable mode**: Allows `../../etc/passwd` to access `/etc/passwd`
-- **Safe mode**: Restricts all access to within `/app/files/` using path normalization and base checks
-- Path normalization resolves `..` segments after combining base + user input
+### Core Components
+
+- **Virtual File System (VFS)**: `data/vfs.json` defines all files as a flat JSON object with absolute paths as keys
+- **Path Normalization**: `js/normalize.js` resolves `..` segments using a stack-based algorithm
+- **Path Resolution Modes**:
+  - `vulnerableFetch()`: Allows traversal outside `/app/files/` (intentional vulnerability)
+  - `safeFetch()`: Enforces base directory restriction via `startsWith()` check
+
+### Filter Stages
+
+- **Beginner**: No filter, all techniques work
+- **Intermediate**: Blocks raw `..` but allows URL-encoded bypasses (`%2e%2e`)
+- **Advanced**: Blocks decoded `..` but allows double-slash (`..//..//`), mixed encoding (`..%2f`), and null byte (`%00`) bypasses
+
+## Testing
+
+Manual testing only. See `tests/manual-checklist.md` for verification steps and `tests/demo-cases.md` for input/output examples.
+
+Key test paths:
+- `../../etc/passwd` - basic traversal
+- `%2e%2e/%2e%2e/etc/passwd` - URL-encoded bypass
+- `..//..//etc/passwd` - double-slash bypass
+- `../../secrets/flag.txt` - flag capture (shows badge)
 
 ## Security Context
 
-This tool intentionally contains vulnerabilities for educational purposes. The "vulnerable" behaviors are designed to teach about directory traversal attacks. Never implement similar unprotected path resolution in production code.
+The vulnerabilities are intentional for educational purposes. The `isBlockedByFilter()` function has deliberate gaps to allow bypass techniques. Never use similar patterns in production code.

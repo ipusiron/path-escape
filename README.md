@@ -1,11 +1,36 @@
 <!--
 ---
-title: PathEscape
-category: web-security
-difficulty: 1
-description: Hands-on directory traversal training app. Learn `../` path attacks and defenses through staged challenges, all client-side.
-tags: [directory-traversal, web-security, demo, js, training]
-demo: https://ipusiron.github.io/path-escape/
+id: day068
+slug: path-escape
+
+title: "PathEscape"
+
+subtitle_ja: "ディレクトリートラバーサル体験ツール"
+subtitle_en: "Directory Traversal Training Tool"
+
+description_ja: "わざと脆弱なファイル閲覧機能をシミュレートし、../を使ったディレクトリートラバーサル攻撃を体験できる教育用Webアプリ。段階的なチャレンジとヒントで初心者でも学習可能。"
+description_en: "Hands-on directory traversal training app. Learn ../ path attacks and defenses through staged challenges, all client-side."
+
+category_ja:
+  - Webセキュリティ
+category_en:
+  - Web Security
+
+difficulty: 2
+
+tags:
+  - directory-traversal
+  - path-traversal
+  - web-security
+  - training
+  - ctf
+  - javascript
+  - client-side
+
+repo_url: "https://github.com/ipusiron/path-escape"
+demo_url: "https://ipusiron.github.io/path-escape/"
+
+hub: true
 ---
 -->
 
