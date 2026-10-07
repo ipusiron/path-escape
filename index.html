@@ -4,101 +4,104 @@
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width,initial-scale=1" />
   <meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self'; style-src 'self' 'unsafe-inline'; img-src 'self' data:; connect-src 'self'; font-src 'self'; object-src 'none'; frame-src 'none'; base-uri 'self';" />
-  <title>PathEscape — ディレクトリートラバーサル体験ツール</title>
+  <title>PathEscape — Directory Traversal Playground</title>
   <link rel="stylesheet" href="css/style.css" />
 </head>
 <body>
   <header>
-    <h1>PathEscape <small>— ディレクトリートラバーサル体験ツール</small></h1>
-    <p class="lead">クライアントサイドで動く仮想ファイルシステムを使って `../` によるパス操作を学びます。</p>
+    <h1><span data-i18n="ui.title">PathEscape</span> <small data-i18n="ui.subtitle">— ディレクトリートラバーサル体験ツール</small></h1>
+    <p class="lead" data-i18n="ui.lead">クライアントサイドで動く仮想ファイルシステムを使って `../` によるパス操作を学びます。</p>
     <div class="security-warning">
-      ⚠️ <strong>教育目的専用</strong>：このツールは学習専用です。実際のWebサイトへの攻撃は法的に禁止されています。
+      ⚠️ <strong data-i18n="ui.warnStrong">教育目的専用</strong><span data-i18n="ui.warnBody">：このツールは学習専用です。実際のWebサイトへの攻撃は法的に禁止されています。</span>
     </div>
-    <button id="help-btn" class="help-button" aria-label="ヘルプ">
-      <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-        <circle cx="12" cy="12" r="10"></circle>
-        <path d="M9.09 9a3 3 0 0 1 5.83 1c0 2-3 3-3 3"></path>
-        <line x1="12" y1="17" x2="12.01" y2="17"></line>
-      </svg>
-    </button>
+    <div class="header-buttons">
+      <button id="lang-btn" class="lang-button" type="button" data-i18n="ui.langButton">EN</button>
+      <button id="help-btn" class="help-button" type="button" data-i18n-attr="aria-label:ui.help" aria-label="ヘルプ">
+        <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          <circle cx="12" cy="12" r="10"></circle>
+          <path d="M9.09 9a3 3 0 0 1 5.83 1c0 2-3 3-3 3"></path>
+          <line x1="12" y1="17" x2="12.01" y2="17"></line>
+        </svg>
+      </button>
+    </div>
   </header>
 
   <div id="help-modal" class="help-modal hidden">
     <div class="help-content">
-      <button class="help-close" aria-label="閉じる">&times;</button>
-      <h2>PathEscape の使い方</h2>
+      <button class="help-close" type="button" data-i18n-attr="aria-label:ui.close" aria-label="閉じる">&times;</button>
+      <h2 data-i18n="help.title">PathEscape の使い方</h2>
 
       <div class="help-section">
-        <h3>🎯 クイックスタート</h3>
+        <h3 data-i18n="help.quickstart">🎯 クイックスタート</h3>
         <ol>
-          <li><strong>攻撃体験タブ</strong>を選択（デフォルト）</li>
-          <li>パス入力欄に <code>/app/files/readme.md</code> を入力してFetch</li>
-          <li><code>/robots.txt</code> で機密パスのヒントを探す</li>
-          <li>次に <code>../../etc/passwd</code> や <code>../../secrets/flag.txt</code> を試す</li>
-          <li>ヒントボタンで攻略のコツを確認</li>
+          <li><strong data-i18n="help.qs1Pre">攻撃体験タブ</strong><span data-i18n="help.qs1Post">を選択（デフォルト）</span></li>
+          <li><span data-i18n="help.qs2Pre">パス入力欄に </span><code>/app/files/readme.md</code><span data-i18n="help.qs2Post"> を入力してFetch</span></li>
+          <li><span data-i18n="help.qs3Pre"></span><code>/robots.txt</code><span data-i18n="help.qs3Post"> で機密パスのヒントを探す</span></li>
+          <li><span data-i18n="help.qs4Pre">次に </span><code>../../etc/passwd</code><span data-i18n="help.qs4Mid"> や </span><code>../../secrets/flag.txt</code><span data-i18n="help.qs4Post"> を試す</span></li>
+          <li data-i18n="help.qs5">ヒントボタンで攻略のコツを確認</li>
         </ol>
       </div>
 
       <div class="help-section">
-        <h3>🔍 フィルターと、それを破る手法</h3>
-        <p>フィルターごとに欠陥があり、破る手法が1つ対応します。目標はいつも <code>/secrets/flag.txt</code> を取ることです。</p>
+        <h3 data-i18n="help.filters">🔍 フィルターと、それを破る手法</h3>
+        <p><span data-i18n="help.filtersIntroPre">フィルターごとに欠陥があり、破る手法が1つ対応します。目標はいつも </span><code>/secrets/flag.txt</code><span data-i18n="help.filtersIntroPost"> を取ることです。</span></p>
 
-        <h4>1. なし（フィルターなし）</h4>
+        <h4 data-i18n="help.f1">1. なし（フィルターなし）</h4>
         <ul>
-          <li>そのまま上に戻れます。例: <code>../../secrets/flag.txt</code></li>
-          <li>まず <code>/robots.txt</code> で機密パスのヒントを探すのも手です</li>
+          <li><span data-i18n="help.f1a">そのまま上に戻れます。例: </span><code>../../secrets/flag.txt</code></li>
+          <li><span data-i18n="help.f1bPre">まず </span><code>/robots.txt</code><span data-i18n="help.f1bPost"> で機密パスのヒントを探すのも手です</span></li>
         </ul>
 
-        <h4>2. 生の「..」を弾く</h4>
+        <h4 data-i18n="help.f2">2. 生の「..」を弾く</h4>
         <ul>
-          <li>欠陥: デコードする前の入力しか見ないので、エンコードされた <code>..</code> を見逃します</li>
-          <li>破る手法（URLエンコード）: <code>%2e%2e/%2e%2e/secrets/flag.txt</code></li>
+          <li><span data-i18n="help.f2aPre">欠陥: デコードする前の入力しか見ないので、エンコードされた </span><code>..</code><span data-i18n="help.f2aPost">を見逃します</span></li>
+          <li><span data-i18n="help.f2b">破る手法（URLエンコード）: </span><code>%2e%2e/%2e%2e/secrets/flag.txt</code></li>
         </ul>
 
-        <h4>3. 「../」を消す</h4>
+        <h4 data-i18n="help.f3">3. 「../」を消す</h4>
         <ul>
-          <li>欠陥: <code>../</code> を消したあと、結果を見直しません</li>
-          <li>破る手法（入れ子）: <code>....//....//secrets/flag.txt</code>（内側を消すと <code>../../</code> が組み上がる）</li>
+          <li><span data-i18n="help.f3aPre">欠陥: </span><code>../</code><span data-i18n="help.f3aPost">を消したあと、結果を見直しません</span></li>
+          <li><span data-i18n="help.f3bPre">破る手法（入れ子）: </span><code>....//....//secrets/flag.txt</code><span data-i18n="help.f3bPost">（内側を消すと ../../ が組み上がる）</span></li>
         </ul>
 
-        <h4>4. デコードして「..」を弾く</h4>
+        <h4 data-i18n="help.f4">4. デコードして「..」を弾く</h4>
         <ul>
-          <li>欠陥: 1回だけデコードして確認し、その後もう1回デコードされます</li>
-          <li>破る手法（二重エンコード）: <code>%252e%252e%252f%252e%252e%252fsecrets%252fflag.txt</code></li>
+          <li data-i18n="help.f4a">欠陥: 1回だけデコードして確認し、その後もう1回デコードされます</li>
+          <li><span data-i18n="help.f4b">破る手法（二重エンコード）: </span><code>%252e%252e%252f%252e%252e%252fsecrets%252fflag.txt</code></li>
         </ul>
 
-        <h4>5. 拡張子チェック（画像だけ）</h4>
+        <h4 data-i18n="help.f5">5. 拡張子チェック（画像だけ）</h4>
         <ul>
-          <li>欠陥: 末尾の拡張子だけ見て許可し、取得は <code>\0</code>（ヌルバイト）で切ります</li>
-          <li>破る手法（ヌルバイト）: <code>../../secrets/flag.txt%00.png</code>（拡張子は <code>.png</code> で通り、取得は <code>flag.txt</code>）</li>
-        </ul>
-      </div>
-
-      <div class="help-section">
-        <h3>🛡️ 防御の学習</h3>
-        <ul>
-          <li><strong>Safe Mode</strong>に切り替えると、適切な対策が実装された状態を確認できます</li>
-          <li>座学タブで詳しい技術解説と対策方法を学べます</li>
+          <li><span data-i18n="help.f5aPre">欠陥: 末尾の拡張子だけ見て許可し、取得は </span><code>\0</code><span data-i18n="help.f5aPost">（ヌルバイト）で切ります</span></li>
+          <li><span data-i18n="help.f5bPre">破る手法（ヌルバイト）: </span><code>../../secrets/flag.txt%00.png</code><span data-i18n="help.f5bPost">（拡張子は .png で通り、取得は flag.txt）</span></li>
         </ul>
       </div>
 
       <div class="help-section">
-        <h3>💡 Tips</h3>
+        <h3 data-i18n="help.defense">🛡️ 防御の学習</h3>
         <ul>
-          <li><strong>robots.txt活用</strong>: <code>/robots.txt</code> で機密ディレクトリーのヒントを発見</li>
-          <li><strong>デバッグ</strong>: DevToolsのConsoleで <code>Object.keys(window.VFS)</code> を実行すると、仮想ファイルシステムの全パスが確認できます</li>
-          <li><strong>ログ確認</strong>: 取得ログでリクエスト履歴とフィルター状況を確認</li>
-          <li><strong>エラー分析</strong>: 出力ビューでファイル内容やエラーメッセージを確認</li>
-          <li><strong>手動クリア</strong>: ヒントは手動で×ボタンを押すまで表示され続けます</li>
+          <li><strong data-i18n="help.d1Pre">Safe Mode</strong><span data-i18n="help.d1Post">に切り替えると、適切な対策が実装された状態を確認できます</span></li>
+          <li data-i18n="help.d2">座学タブで詳しい技術解説と対策方法を学べます</li>
         </ul>
       </div>
 
       <div class="help-section">
-        <h3>📚 詳細ドキュメント</h3>
-        <p>より詳しい使い方や技術情報は以下を参照：</p>
+        <h3 data-i18n="help.tips">💡 Tips</h3>
         <ul>
-          <li><a href="https://github.com/ipusiron/path-escape#readme" target="_blank" rel="noopener noreferrer">README（GitHub）</a></li>
-          <li><a href="https://github.com/ipusiron/path-escape/blob/main/docs/threat-model.md" target="_blank" rel="noopener noreferrer">脅威モデルと技術解説</a></li>
+          <li><strong data-i18n="help.tip1Strong">robots.txt活用</strong><span data-i18n="help.tip1Pre">: </span><code>/robots.txt</code><span data-i18n="help.tip1Post"> で機密ディレクトリーのヒントを発見</span></li>
+          <li><strong data-i18n="help.tip2Strong">デバッグ</strong><span data-i18n="help.tip2Pre">: DevToolsのConsoleで </span><code>Object.keys(window.VFS)</code><span data-i18n="help.tip2Post"> を実行すると、仮想ファイルシステムの全パスが確認できます</span></li>
+          <li><strong data-i18n="help.tip3Strong">ログ確認</strong><span data-i18n="help.tip3">: 取得ログでリクエスト履歴とフィルター状況を確認</span></li>
+          <li><strong data-i18n="help.tip4Strong">エラー分析</strong><span data-i18n="help.tip4">: 出力ビューでファイル内容やエラーメッセージを確認</span></li>
+          <li><strong data-i18n="help.tip5Strong">手動クリア</strong><span data-i18n="help.tip5">: ヒントは手動で×ボタンを押すまで表示され続けます</span></li>
+        </ul>
+      </div>
+
+      <div class="help-section">
+        <h3 data-i18n="help.docs">📚 詳細ドキュメント</h3>
+        <p data-i18n="help.docsIntro">より詳しい使い方や技術情報は以下を参照：</p>
+        <ul>
+          <li><a href="https://github.com/ipusiron/path-escape#readme" target="_blank" rel="noopener noreferrer" data-i18n="help.docsReadme">README（GitHub）</a></li>
+          <li><a href="https://github.com/ipusiron/path-escape/blob/main/docs/threat-model.md" target="_blank" rel="noopener noreferrer" data-i18n="help.docsThreat">脅威モデルと技術解説</a></li>
         </ul>
       </div>
     </div>
@@ -106,8 +109,8 @@
 
   <div class="tabs">
     <div class="tab-nav">
-      <button class="tab-button active" data-tab="attack">攻撃体験</button>
-      <button class="tab-button" data-tab="learning">座学</button>
+      <button class="tab-button active" type="button" data-tab="attack" data-i18n="ui.tabAttack">攻撃体験</button>
+      <button class="tab-button" type="button" data-tab="learning" data-i18n="ui.tabLearning">座学</button>
     </div>
 
     <div class="tab-content active" id="tab-attack">
@@ -115,40 +118,40 @@
         <div class="attack-controls">
           <div class="control-row">
             <div class="stage-controls">
-              <label for="stage">フィルター:</label>
+              <label for="stage" data-i18n="ui.filterLabel">フィルター:</label>
               <select id="stage">
-                <option value="none">なし（フィルターなし）</option>
-                <option value="raw">生の「..」を弾く</option>
-                <option value="strip">「../」を消す</option>
-                <option value="decode">デコードして「..」を弾く</option>
-                <option value="ext">拡張子チェック（画像だけ）</option>
+                <option value="none" data-i18n="ui.stageNone">なし（フィルターなし）</option>
+                <option value="raw" data-i18n="ui.stageRaw">生の「..」を弾く</option>
+                <option value="strip" data-i18n="ui.stageStrip">「../」を消す</option>
+                <option value="decode" data-i18n="ui.stageDecode">デコードして「..」を弾く</option>
+                <option value="ext" data-i18n="ui.stageExt">拡張子チェック（画像だけ）</option>
               </select>
             </div>
             <div class="mode-controls">
-              <label for="mode">モード:</label>
+              <label for="mode" data-i18n="ui.modeLabel">モード:</label>
               <select id="mode">
                 <option value="vulnerable">Vulnerable</option>
                 <option value="safe">Safe</option>
               </select>
             </div>
-            <button id="hint-btn" class="btn">ヒントを表示</button>
+            <button id="hint-btn" class="btn" type="button" data-i18n="ui.hintButton">ヒントを表示</button>
           </div>
         </div>
 
         <div class="attack-main">
           <div class="attack-left">
             <div class="pane">
-              <h3>ファイルツリー</h3>
+              <h3 data-i18n="ui.fileTree">ファイルツリー</h3>
               <div id="file-tree" class="file-tree"></div>
             </div>
             <div class="pane">
-              <h3>パス入力</h3>
+              <h3 data-i18n="ui.pathInput">パス入力</h3>
               <div class="input-row">
                 <input id="path-input" type="text" placeholder="/app/files/readme.md" />
-                <button id="fetch-btn" class="btn primary">Fetch</button>
+                <button id="fetch-btn" class="btn primary" type="button" data-i18n="ui.fetch">Fetch</button>
               </div>
               <div class="info">
-                <p><strong>ヒント:</strong> フィルターごとに、それを破る手法が違います。「ヒントを表示」で、いま選んでいるフィルターの欠陥と効く手法がわかります。</p>
+                <p><strong data-i18n="ui.hintStrong">ヒント:</strong> <span data-i18n="ui.inputHint">フィルターごとに、それを破る手法が違います。「ヒントを表示」で、いま選んでいるフィルターの欠陥と効く手法がわかります。</span></p>
               </div>
               <div id="hint-area" class="hint hidden"></div>
             </div>
@@ -156,15 +159,31 @@
 
           <div class="attack-right">
             <div class="pane">
-              <h3>出力ビュー</h3>
-              <pre id="output" class="output" aria-live="polite">// ここにファイル内容が表示されます</pre>
+              <h3 data-i18n="ui.outputView">出力ビュー</h3>
+              <pre id="output" class="output" aria-live="polite" data-i18n="ui.outputPlaceholder">// ここにファイル内容が表示されます</pre>
               <div id="badge-area" class="badge-area"></div>
             </div>
             <div class="pane">
-              <h3>取得ログ</h3>
+              <h3 data-i18n="ui.fetchLog">取得ログ</h3>
               <ul id="log" class="log"></ul>
             </div>
           </div>
+        </div>
+
+        <div class="pane defense-pane">
+          <h3 data-i18n="ui.defenseHeading">この入力を3つの対策に通すと</h3>
+          <p class="note" data-i18n="ui.defenseNote1">フィルター（上のフィルター欄）とは別に、同じ入力を代表的な3つの対策に通した結果です。Fetch を押すと更新されます。</p>
+          <div class="table-wrap">
+            <table class="defense-table">
+              <thead>
+                <tr><th scope="col" data-i18n="ui.defenseColDefense">対策</th><th scope="col" data-i18n="ui.defenseColResult">結果</th></tr>
+              </thead>
+              <tbody id="defense-body">
+                <tr><td colspan="2" data-i18n="ui.defensePlaceholder">パスを入力して Fetch を押すと、各対策の結果が出ます。</td></tr>
+              </tbody>
+            </table>
+          </div>
+          <p class="note"><span data-i18n="ui.defenseNote2Pre">ブラックリスト（</span><code>../</code><span data-i18n="ui.defenseNote2Mid"> を消す）は、入れ子や符号化で </span><code>/app/files/</code><span data-i18n="ui.defenseNote2Post"> の外のファイルが漏れることがあります。正規化してから base を確かめる方法と、許可リストは、どの手法でも止めます。</span></p>
         </div>
       </div>
     </div>
@@ -173,262 +192,241 @@
       <div class="learning-container">
         <div class="accordion">
           <div class="accordion-item">
-            <button class="accordion-header">
-              <span>ディレクトリートラバーサルとは</span>
+            <button class="accordion-header" type="button">
+              <span data-i18n="learn.a1.title">ディレクトリートラバーサルとは</span>
               <span class="accordion-icon">▼</span>
             </button>
             <div class="accordion-content">
-              <p>ディレクトリートラバーサル（Directory Traversal）は、パストラバーサル（Path Traversal）とも呼ばれ、Webアプリケーションがファイルパスを適切に検証しないことで、攻撃者が本来アクセスできないファイルやディレクトリーにアクセスできてしまう脆弱性です。</p>
-
-              <h4>基本的な仕組み</h4>
-              <p>多くのOSでは、<code>..</code>（ドットドット）は親ディレクトリーを表します。攻撃者はこの記号を悪用して、アプリケーションが意図したディレクトリーから外のファイルにアクセスします。</p>
-
+              <p data-i18n="learn.a1.p1">ディレクトリートラバーサル（Directory Traversal）は、パストラバーサル（Path Traversal）とも呼ばれ、Webアプリケーションがファイルパスを適切に検証しないことで、攻撃者が本来アクセスできないファイルやディレクトリーにアクセスできてしまう脆弱性です。</p>
+              <h4 data-i18n="learn.a1.h1">基本的な仕組み</h4>
+              <p><span data-i18n="learn.a1.p2Pre">多くのOSでは、</span><code>..</code><span data-i18n="learn.a1.p2Post">（ドットドット）は親ディレクトリーを表します。攻撃者はこの記号を悪用して、アプリケーションが意図したディレクトリーから外のファイルにアクセスします。</span></p>
               <div class="code-example">
                 <pre>正常なリクエスト: /app/files/readme.txt
 攻撃的なリクエスト: /app/files/../../../etc/passwd</pre>
               </div>
-
-              <h4>なぜ危険なのか</h4>
+              <h4 data-i18n="learn.a1.h2">なぜ危険なのか</h4>
               <ul>
-                <li>設定ファイル（データベース接続情報など）の漏洩</li>
-                <li>ソースコードの露出による別の脆弱性の発見</li>
-                <li>システムファイル（/etc/passwd、/etc/shadow）へのアクセス</li>
-                <li>他ユーザーのデータへの不正アクセス</li>
+                <li data-i18n="learn.a1.l1">設定ファイル（データベース接続情報など）の漏洩</li>
+                <li data-i18n="learn.a1.l2">ソースコードの露出による別の脆弱性の発見</li>
+                <li data-i18n="learn.a1.l3">システムファイル（/etc/passwd、/etc/shadow）へのアクセス</li>
+                <li data-i18n="learn.a1.l4">他ユーザーのデータへの不正アクセス</li>
               </ul>
             </div>
           </div>
 
           <div class="accordion-item">
-            <button class="accordion-header">
-              <span>典型的な攻撃手法</span>
+            <button class="accordion-header" type="button">
+              <span data-i18n="learn.a2.title">典型的な攻撃手法</span>
               <span class="accordion-icon">▼</span>
             </button>
             <div class="accordion-content">
-              <h4>1. 基本的な相対パス攻撃</h4>
+              <h4 data-i18n="learn.a2.h1">1. 基本的な相対パス攻撃</h4>
               <div class="code-example">
                 <pre>../../../etc/passwd
 ..\..\..\..\windows\system32\config\sam</pre>
               </div>
-              <p>最も単純な形式。<code>..</code>を繰り返して上位ディレクトリーに移動します。</p>
+              <p><span data-i18n="learn.a2.p1Pre">最も単純な形式。</span><code>..</code><span data-i18n="learn.a2.p1Post">を繰り返して上位ディレクトリーに移動します。</span></p>
 
-              <h4>2. エンコーディング回避</h4>
+              <h4 data-i18n="learn.a2.h2">2. エンコーディング回避</h4>
               <div class="code-example">
                 <pre>URLエンコード: %2e%2e%2f
 ダブルURLエンコード: %252e%252e%252f
 Unicodeエンコード: ..%c0%af</pre>
               </div>
-              <p>フィルターを回避するために、様々なエンコーディングを使用します。</p>
+              <p data-i18n="learn.a2.p2">フィルターを回避するために、さまざまなエンコーディングを使用します。</p>
 
-              <h4>3. Null文字インジェクション</h4>
+              <h4 data-i18n="learn.a2.h3">3. Null文字インジェクション</h4>
               <div class="code-example">
                 <pre>../../../../etc/passwd%00.jpg</pre>
               </div>
-              <p>一部の言語では%00（Null文字）以降を無視するため、拡張子チェックを回避できます。</p>
+              <p data-i18n="learn.a2.p3">一部の言語では%00（Null文字）以降を無視するため、拡張子チェックを回避できます。</p>
 
-              <h4>4. 絶対パス指定</h4>
+              <h4 data-i18n="learn.a2.h4">4. 絶対パス指定</h4>
               <div class="code-example">
                 <pre>/etc/passwd
 C:\windows\system32\config\sam</pre>
               </div>
-              <p>相対パスではなく、絶対パスを直接指定する手法です。</p>
+              <p data-i18n="learn.a2.p4">相対パスではなく、絶対パスを直接指定する手法です。</p>
 
-              <h4>5. 入れ子（ダブルスラッシュ）</h4>
+              <h4 data-i18n="learn.a2.h5">5. 入れ子（ダブルスラッシュ）</h4>
               <div class="code-example">
                 <pre>....//....//etc/passwd</pre>
               </div>
-              <p><code>../</code> を1回だけ文字列置換で消すフィルターを破ります。内側の <code>../</code> を消すと、外側の文字から <code>../</code> が組み上がります。スタック方式で正規化するフィルターには効きません（このツールの「<code>../</code> を消す」フィルターで試せます）。</p>
+              <p><span data-i18n="learn.a2.p5Pre"></span><code>../</code><span data-i18n="learn.a2.p5Mid"> を1回だけ文字列置換で消すフィルターを破ります。内側の </span><code>../</code><span data-i18n="learn.a2.p5Post"> を消すと、外側の文字から ../ が組み上がります。スタック方式で正規化するフィルターには効きません（このツールの「../ を消す」フィルターで試せます）。</span></p>
             </div>
           </div>
 
           <div class="accordion-item">
-            <button class="accordion-header">
-              <span>実際の被害事例</span>
+            <button class="accordion-header" type="button">
+              <span data-i18n="learn.a3.title">実際の被害事例</span>
               <span class="accordion-icon">▼</span>
             </button>
             <div class="accordion-content">
-              <h4>CVE-2021-41773 — Apache HTTP Server 2.4.49</h4>
-              <p>2021年10月、2.4.49で入ったパスの正規化の不備。Aliasの外のファイルを読め、CGIが有効だとリモートコード実行につながりました。発見時点ですでに攻撃に使われていました。URLエンコードした <code>.%2e/</code> で <code>../</code> を作る形が使われました。</p>
+              <h4 data-i18n="learn.a3.h1">CVE-2021-41773 — Apache HTTP Server 2.4.49</h4>
+              <p><span data-i18n="learn.a3.p1Pre">2021年10月、2.4.49で入ったパスの正規化の不備。Aliasの外のファイルを読め、CGIが有効だとリモートコード実行につながりました。発見時点ですでに攻撃に使われていました。URLエンコードした </span><code>.%2e/</code><span data-i18n="learn.a3.p1Post"> で ../ を作る形が使われました。</span></p>
               <div class="code-example">
                 <pre>curl 'http://target/cgi-bin/.%2e/.%2e/.%2e/.%2e/etc/passwd'</pre>
               </div>
 
-              <h4>CVE-2021-42013 — 2.4.50の修正が不完全だった</h4>
-              <p>41773を直した2.4.50の修正が不十分で、数日後に別の形で再び破られました（2.4.49・2.4.50が対象、2.4.51で修正）。ランサムウェアの攻撃にも使われました。<strong>「1回ふさいでも、エンコードの入れ子で抜けられる」</strong>という、このツールのフィルターが見せる話そのものです。</p>
+              <h4 data-i18n="learn.a3.h2">CVE-2021-42013 — 2.4.50の修正が不完全だった</h4>
+              <p><span data-i18n="learn.a3.p2Pre">41773を直した2.4.50の修正が不十分で、数日後に別の形で再び破られました（2.4.49・2.4.50が対象、2.4.51で修正）。ランサムウェアの攻撃にも使われました。</span><strong data-i18n="learn.a3.p2Strong">「1回ふさいでも、エンコードの入れ子で抜けられる」</strong><span data-i18n="learn.a3.p2Post">という、このツールのフィルターが見せる話そのものです。</span></p>
 
-              <h4>CVE-2020-5410 — Spring Cloud Config Server</h4>
-              <p>2020年、設定を配る Spring Cloud Config Server で、特別に細工したGETリクエストから任意のファイルを読めるディレクトリートラバーサル。CISAの「悪用が確認された脆弱性」に載りました。</p>
+              <h4 data-i18n="learn.a3.h3">CVE-2020-5410 — Spring Cloud Config Server</h4>
+              <p data-i18n="learn.a3.p3">2020年、設定を配る Spring Cloud Config Server で、特別に細工したGETリクエストから任意のファイルを読めるディレクトリートラバーサル。CISAの「悪用が確認された脆弱性」に載りました。</p>
 
-              <p class="warning">これらは、入力の検証とパスの正規化の大切さと、「修正が不完全だと再び破られる」ことを示しています。</p>
+              <p class="warning" data-i18n="learn.a3.warn">これらは、入力の検証とパスの正規化の大切さと、「修正が不完全だと再び破られる」ことを示しています。</p>
             </div>
           </div>
 
           <div class="accordion-item">
-            <button class="accordion-header">
-              <span>セキュリティ初学者向け解説</span>
+            <button class="accordion-header" type="button">
+              <span data-i18n="learn.a4.title">セキュリティ初学者向け解説</span>
               <span class="accordion-icon">▼</span>
             </button>
             <div class="accordion-content">
-              <h4>なぜこの脆弱性が生まれるのか</h4>
-              <p>開発者が「ユーザーは正しい入力をする」と仮定してしまうことが原因です。</p>
+              <h4 data-i18n="learn.a4.h1">なぜこの脆弱性が生まれるのか</h4>
+              <p data-i18n="learn.a4.p1">開発者が「ユーザーは正しい入力をする」と仮定してしまうことが原因です。</p>
 
               <div class="analogy">
-                <h5>身近な例で理解する</h5>
-                <p>図書館で「3階の本を借りたい」と言われたとき、エレベーターのボタンを押してもらう場面を想像してください。</p>
+                <h5 data-i18n="learn.a4.analogyTitle">身近な例で理解する</h5>
+                <p data-i18n="learn.a4.analogyP">図書館で「3階の本を借りたい」と言われたとき、エレベーターのボタンを押してもらう場面を想像してください。</p>
                 <ul>
-                  <li>正常：「3階」ボタンを押す</li>
-                  <li>攻撃：「地下2階（立入禁止の書庫）」ボタンを押す</li>
+                  <li data-i18n="learn.a4.analogyL1">正常：「3階」ボタンを押す</li>
+                  <li data-i18n="learn.a4.analogyL2">攻撃：「地下2階（立入禁止の書庫）」ボタンを押す</li>
                 </ul>
-                <p>システムが「押されたボタンの階に行く」だけで、「行ってよい階かチェックしない」場合、問題が発生します。</p>
+                <p data-i18n="learn.a4.analogyP2">システムが「押されたボタンの階に行く」だけで、「行ってよい階かチェックしない」場合、問題が発生します。</p>
               </div>
 
-              <h4>攻撃者の思考プロセス</h4>
+              <h4 data-i18n="learn.a4.h2">攻撃者の思考プロセス</h4>
               <ol>
-                <li><strong>偵察</strong>：エラーメッセージやURLパラメーターを観察</li>
-                <li><strong>仮説</strong>：「ファイルパスを受け取っているようだ」</li>
-                <li><strong>実験</strong>：<code>../</code>を追加してみる</li>
-                <li><strong>確認</strong>：エラーメッセージが変わった？別のファイルが見えた？</li>
-                <li><strong>拡大</strong>：より深いディレクトリーや重要なファイルを狙う</li>
+                <li><strong data-i18n="learn.a4.step1Strong">偵察</strong><span data-i18n="learn.a4.step1">：エラーメッセージやURLパラメーターを観察</span></li>
+                <li><strong data-i18n="learn.a4.step2Strong">仮説</strong><span data-i18n="learn.a4.step2">：「ファイルパスを受け取っているようだ」</span></li>
+                <li><strong data-i18n="learn.a4.step3Strong">実験</strong><span data-i18n="learn.a4.step3Pre">：</span><code>../</code><span data-i18n="learn.a4.step3Post">を追加してみる</span></li>
+                <li><strong data-i18n="learn.a4.step4Strong">確認</strong><span data-i18n="learn.a4.step4">：エラーメッセージが変わった？別のファイルが見えた？</span></li>
+                <li><strong data-i18n="learn.a4.step5Strong">拡大</strong><span data-i18n="learn.a4.step5">：より深いディレクトリーや重要なファイルを狙う</span></li>
               </ol>
 
-              <h4>よくある誤解</h4>
+              <h4 data-i18n="learn.a4.h3">よくある誤解</h4>
               <ul>
-                <li>❌「拡張子をチェックしているから安全」→ Null文字で回避可能</li>
-                <li>❌「../を削除しているから安全」→ ....//で回避可能</li>
-                <li>❌「WAFがあるから大丈夫」→ 新しい回避手法は常に発見される</li>
-                <li>❌「内部システムだから関係ない」→ 内部犯行のリスクも存在</li>
+                <li data-i18n="learn.a4.m1">❌「拡張子をチェックしているから安全」→ Null文字で回避可能</li>
+                <li data-i18n="learn.a4.m2">❌「../を削除しているから安全」→ ....//で回避可能</li>
+                <li data-i18n="learn.a4.m3">❌「WAFがあるから大丈夫」→ 新しい回避手法は常に発見される</li>
+                <li data-i18n="learn.a4.m4">❌「内部システムだから関係ない」→ 内部犯行のリスクも存在</li>
               </ul>
             </div>
           </div>
 
           <div class="accordion-item">
-            <button class="accordion-header">
-              <span>開発者向け対策方法</span>
+            <button class="accordion-header" type="button">
+              <span data-i18n="learn.a5.title">開発者向け対策方法</span>
               <span class="accordion-icon">▼</span>
             </button>
             <div class="accordion-content">
-              <h4>1. 入力検証とサニタイゼーション</h4>
+              <h4 data-i18n="learn.a5.h1">1. 入力検証とサニタイゼーション</h4>
               <div class="code-example">
                 <pre>// Node.js の例
 const path = require('path');
 
 function safeJoin(base, userInput) {
-  // パスを正規化
   const normalizedPath = path.normalize(path.join(base, userInput));
-
-  // ベースディレクトリー外へのアクセスをブロック
   if (!normalizedPath.startsWith(path.normalize(base))) {
     throw new Error('Invalid path');
   }
-
   return normalizedPath;
 }</pre>
               </div>
 
-              <h4>2. ホワイトリストアプローチ</h4>
+              <h4 data-i18n="learn.a5.h2">2. ホワイトリストアプローチ</h4>
               <div class="code-example">
-                <pre>// 許可されたファイルのみアクセス可能
-const ALLOWED_FILES = [
-  'readme.md',
-  'help.txt',
-  'manual.pdf'
-];
-
+                <pre>const ALLOWED_FILES = ['readme.md', 'help.txt', 'manual.pdf'];
 if (!ALLOWED_FILES.includes(requestedFile)) {
   return res.status(403).send('Access denied');
 }</pre>
               </div>
 
-              <h4>3. chroot/コンテナーによる隔離</h4>
+              <h4 data-i18n="learn.a5.h3">3. chroot/コンテナーによる隔離</h4>
               <div class="code-example">
-                <pre># Docker の例
-FROM node:14-alpine
+                <pre>FROM node:14-alpine
 WORKDIR /app
-# アプリケーションは /app 以外にアクセスできない
 COPY --chown=node:node . .
 USER node</pre>
               </div>
 
-              <h4>4. 最小権限の原則</h4>
+              <h4 data-i18n="learn.a5.h4">4. 最小権限の原則</h4>
               <ul>
-                <li>アプリケーションは必要最小限のファイルのみ読み取り可能に</li>
-                <li>実行ユーザーの権限を制限</li>
-                <li>機密ファイルは別のサーバー/ディレクトリーに配置</li>
+                <li data-i18n="learn.a5.l1">アプリケーションは必要最小限のファイルのみ読み取り可能に</li>
+                <li data-i18n="learn.a5.l2">実行ユーザーの権限を制限</li>
+                <li data-i18n="learn.a5.l3">機密ファイルは別のサーバー/ディレクトリーに配置</li>
               </ul>
 
-              <h4>5. セキュアコーディング実践</h4>
+              <h4 data-i18n="learn.a5.h5">5. セキュアコーディング実践</h4>
               <div class="code-example">
-                <pre>// Python の例
+                <pre># Python の例
 import os
 
 def get_file_safely(base_dir, file_name):
-    # os.path.join と realpath で安全なパスを構築
     safe_path = os.path.realpath(os.path.join(base_dir, file_name))
-
-    # ベースディレクトリー内であることを確認
     if not safe_path.startswith(os.path.realpath(base_dir)):
         raise ValueError("Access denied")
-
-    # ファイルの存在確認
     if not os.path.exists(safe_path):
         raise FileNotFoundError("File not found")
-
     return safe_path</pre>
               </div>
 
-              <h4>チェックリスト</h4>
+              <h4 data-i18n="learn.a5.checkTitle">チェックリスト</h4>
               <ul class="checklist">
-                <li>ユーザー入力を信頼しない</li>
-                <li>パスを正規化してから検証</li>
-                <li>ベースディレクトリー外へのアクセスを防ぐ</li>
-                <li>可能な限りホワイトリストを使用</li>
-                <li>エラーメッセージに詳細情報を含めない</li>
-                <li>ログを記録して異常なアクセスを検知</li>
-                <li>定期的なセキュリティテストの実施</li>
+                <li data-i18n="learn.a5.c1">ユーザー入力を信頼しない</li>
+                <li data-i18n="learn.a5.c2">パスを正規化してから検証</li>
+                <li data-i18n="learn.a5.c3">ベースディレクトリー外へのアクセスを防ぐ</li>
+                <li data-i18n="learn.a5.c4">可能な限りホワイトリストを使用</li>
+                <li data-i18n="learn.a5.c5">エラーメッセージに詳細情報を含めない</li>
+                <li data-i18n="learn.a5.c6">ログを記録して異常なアクセスを検知</li>
+                <li data-i18n="learn.a5.c7">定期的なセキュリティテストの実施</li>
               </ul>
             </div>
           </div>
 
           <div class="accordion-item">
-            <button class="accordion-header">
-              <span>関連する脆弱性と防御技術</span>
+            <button class="accordion-header" type="button">
+              <span data-i18n="learn.a6.title">関連する脆弱性と防御技術</span>
               <span class="accordion-icon">▼</span>
             </button>
             <div class="accordion-content">
-              <h4>関連する脆弱性</h4>
+              <h4 data-i18n="learn.a6.h1">関連する脆弱性</h4>
               <ul>
-                <li><strong>Local File Inclusion (LFI)</strong>：ローカルファイルを読み込んで実行</li>
-                <li><strong>Remote File Inclusion (RFI)</strong>：外部ファイルを読み込んで実行</li>
-                <li><strong>Path Manipulation</strong>：パス操作全般の脆弱性</li>
-                <li><strong>Information Disclosure</strong>：情報漏洩の一種</li>
+                <li><strong data-i18n="learn.a6.l1Strong">Local File Inclusion (LFI)</strong><span data-i18n="learn.a6.l1">：ローカルファイルを読み込んで実行</span></li>
+                <li><strong data-i18n="learn.a6.l2Strong">Remote File Inclusion (RFI)</strong><span data-i18n="learn.a6.l2">：外部ファイルを読み込んで実行</span></li>
+                <li><strong data-i18n="learn.a6.l3Strong">Path Manipulation</strong><span data-i18n="learn.a6.l3">：パス操作全般の脆弱性</span></li>
+                <li><strong data-i18n="learn.a6.l4Strong">Information Disclosure</strong><span data-i18n="learn.a6.l4">：情報漏洩の一種</span></li>
               </ul>
 
-              <h4>防御技術とツール</h4>
-              <h5>静的解析ツール</h5>
+              <h4 data-i18n="learn.a6.h2">防御技術とツール</h4>
+              <h5 data-i18n="learn.a6.h2a">静的解析ツール</h5>
               <ul>
-                <li>SonarQube - コード品質とセキュリティの検査</li>
-                <li>Checkmarx - 包括的なセキュリティテスト</li>
-                <li>Fortify - エンタープライズ向け脆弱性検出</li>
+                <li data-i18n="learn.a6.sa1">SonarQube - コード品質とセキュリティの検査</li>
+                <li data-i18n="learn.a6.sa2">Checkmarx - 包括的なセキュリティテスト</li>
+                <li data-i18n="learn.a6.sa3">Fortify - エンタープライズ向け脆弱性検出</li>
               </ul>
 
-              <h5>動的解析ツール</h5>
+              <h5 data-i18n="learn.a6.h2b">動的解析ツール</h5>
               <ul>
-                <li>OWASP ZAP - 無料のWebアプリケーションセキュリティスキャナー</li>
-                <li>Burp Suite - プロフェッショナル向けテストツール</li>
-                <li>Acunetix - 自動脆弱性スキャナー</li>
+                <li data-i18n="learn.a6.da1">OWASP ZAP - 無料のWebアプリケーションセキュリティスキャナー</li>
+                <li data-i18n="learn.a6.da2">Burp Suite - プロフェッショナル向けテストツール</li>
+                <li data-i18n="learn.a6.da3">Acunetix - 自動脆弱性スキャナー</li>
               </ul>
 
-              <h5>WAF (Web Application Firewall)</h5>
+              <h5 data-i18n="learn.a6.h2c">WAF (Web Application Firewall)</h5>
               <ul>
-                <li>ModSecurity - オープンソースWAF</li>
-                <li>AWS WAF - クラウドベースの保護</li>
-                <li>Cloudflare WAF - CDN統合型の防御</li>
+                <li data-i18n="learn.a6.waf1">ModSecurity - オープンソースWAF</li>
+                <li data-i18n="learn.a6.waf2">AWS WAF - クラウドベースの保護</li>
+                <li data-i18n="learn.a6.waf3">Cloudflare WAF - CDN統合型の防御</li>
               </ul>
 
-              <h4>セキュリティ標準とガイドライン</h4>
+              <h4 data-i18n="learn.a6.h3">セキュリティ標準とガイドライン</h4>
               <ul>
-                <li><strong>OWASP Top 10</strong> - A01:2021 Broken Access Control に分類</li>
-                <li><strong>CWE-22</strong> - Path Traversal の共通脆弱性タイプ</li>
-                <li><strong>SANS Top 25</strong> - 最も危険なソフトウェアエラーの一つ</li>
+                <li><strong data-i18n="learn.a6.g1Strong">OWASP Top 10</strong><span data-i18n="learn.a6.g1"> - A01:2021 Broken Access Control に分類</span></li>
+                <li><strong data-i18n="learn.a6.g2Strong">CWE-22</strong><span data-i18n="learn.a6.g2"> - Path Traversal の共通脆弱性タイプ</span></li>
+                <li><strong data-i18n="learn.a6.g3Strong">SANS Top 25</strong><span data-i18n="learn.a6.g3"> - 最も危険なソフトウェアエラーの一つ</span></li>
               </ul>
             </div>
           </div>
@@ -439,15 +437,17 @@ def get_file_safely(base_dir, file_name):
 
   <footer>
     <div class="footer">
-      🔗 GitHubリポジトリはこちら（
-      <a href="https://github.com/ipusiron/path-escape" target="_blank" rel="noopener noreferrer">
+      <span data-i18n="ui.footerPre">🔗 GitHubリポジトリはこちら（</span>
+      <a href="https://github.com/ipusiron/path-escape" target="_blank" rel="noopener noreferrer" data-i18n="ui.footerLink">
         ipusiron/path-escape
-      </a> ）
+      </a><span data-i18n="ui.footerPost"> ）</span>
     </div>
   </footer>
 
   <script src="js/pe-core.js"></script>
   <script src="js/vfs-data.js"></script>
+  <script src="js/messages.js"></script>
+  <script src="js/i18n.js"></script>
   <script src="js/script.js"></script>
 </body>
 </html>

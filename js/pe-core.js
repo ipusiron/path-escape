@@ -108,8 +108,36 @@
     return { ok: false, error: 'notfound', path: resolved, steps };
   }
 
+  // ---- 対策の比較（safe の中身を3つに分けて見せる） ----
+  // 入力を、代表的な3つの対策それぞれに通したときの結果を返す。フィルター（ステージ）とは別で、
+  // 「正しい対策はどれで、同じ入力をどこで止めるか」を並べて見せるために使う。
+  // 各対策: { id, allow: bool, path, reason }。allow=true は「このファイルを返す」
+  const ALLOWLIST = ['/app/files/readme.md', '/app/files/public.txt'];
+
+  // 入力を取得パスまで解決する（フィルターなし。デコード→結合→正規化→ヌルバイト切り）
+  function resolvePath(userInput) {
+    const decoded = urlDecodeOnce(userInput);
+    const combined = (decoded.startsWith('/') ? decoded : BASE + decoded).replace(/\/+/g, '/');
+    return truncateAtNull(normalizePath(combined));
+  }
+
+  function defenses(userInput, vfs) {
+    const has = (p) => Object.prototype.hasOwnProperty.call(vfs, p);
+    // 1) ブラックリスト（弱い対策）: '../' '..\' を消してから取得する。base チェックをしないので、
+    //    消したあとに '../' が組み上がる入力（入れ子）や符号化で、base の外のファイルが漏れる
+    const strippedPath = resolvePath(userInput.replace(/\.\.[\\/]/g, ''));
+    // 2) 正規化してから base チェック（正しい対策。全部の手法を止める）
+    const normPath = resolvePath(userInput);
+    // 3) 許可リスト（最も厳しい）: あらかじめ決めたファイルだけ返す
+    return {
+      blacklist: { allow: has(strippedPath), path: strippedPath, leak: has(strippedPath) && !strippedPath.startsWith(BASE) },
+      normalizeCheck: { allow: has(normPath) && normPath.startsWith(BASE), path: normPath, leak: false },
+      allowlist: { allow: ALLOWLIST.includes(normPath) && has(normPath), path: normPath, leak: false },
+    };
+  }
+
   root.PathEscapeCore = {
-    normalizePath, urlDecodeOnce, truncateAtNull, endsWithImageExt,
-    STAGES, STAGE_IDS, STAGE_INFO, IMAGE_EXTS, BASE, resolve,
+    normalizePath, urlDecodeOnce, truncateAtNull, endsWithImageExt, resolvePath,
+    STAGES, STAGE_IDS, STAGE_INFO, IMAGE_EXTS, BASE, ALLOWLIST, resolve, defenses,
   };
 })(typeof globalThis !== 'undefined' ? globalThis : this);

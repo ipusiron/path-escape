@@ -1,55 +1,56 @@
 // script.js — 画面の処理だけ。
-// 依存: window.VFS（vfs-data.js）、window.PathEscapeCore（pe-core.js）。
-// パスの解決・フィルターの判定は PathEscapeCore.resolve() に任せる。
+// 依存: window.VFS（vfs-data.js）、window.PathEscapeCore（pe-core.js）、
+//       window.PathMessages（messages.js）、window.PathI18n（i18n.js）。
+// パスの解決・フィルターの判定は PathEscapeCore.resolve() に任せる。文言は PathMessages.t() から取る。
 
 const C = window.PathEscapeCore;
+const M = window.PathMessages;
+const I18N = window.PathI18n;
+const t = (key, vars) => M.t(key, vars);
 
-// 各フィルターの説明（画面のヒント）。STAGE_INFO.bypass と対応する
-const STAGE_HINT = {
-  none: {
-    title: 'フィルターなし',
-    flaw: 'フィルターがありません。そのまま上のディレクトリーへ戻れます。',
-    how: 'ヒント: ../ を重ねて上に戻ります。\n例: ../../secrets/flag.txt\n\n/robots.txt で機密パスのヒントも探せます。',
-  },
-  raw: {
-    title: '生の「..」を弾く',
-    flaw: 'デコードする前の入力しか見ないので、エンコードされた .. を見逃します。',
-    how: 'ヒント: .. を URL エンコード（%2e%2e）すると、生入力には .. が出ません。\n例: %2e%2e/%2e%2e/secrets/flag.txt',
-  },
-  strip: {
-    title: '「../」を消す',
-    flaw: '../ を消したあと、結果をもう一度見直しません。',
-    how: 'ヒント: ../ を入れ子にすると、内側を消したあとに ../ が組み上がります。\n例: ....//....//secrets/flag.txt',
-  },
-  decode: {
-    title: 'デコードして「..」を弾く',
-    flaw: '1回だけデコードして確認し、その後の処理でもう1回デコードされます。',
-    how: 'ヒント: 二重にエンコードすると、1回のデコードでは .. に戻りきりません。\n例: %252e%252e%252f%252e%252e%252fsecrets%252fflag.txt',
-  },
-  ext: {
-    title: '拡張子チェック（画像だけ）',
-    flaw: '末尾の拡張子だけ見て許可し、取得は \\0（ヌルバイト）で切ります。',
-    how: 'ヒント: 末尾に %00.png を足すと、拡張子は .png で通り、取得は .txt になります。\n例: ../../secrets/flag.txt%00.png',
-  },
-};
+// 出力の途中経過の各段（キーの順に出す）
+const STEP_KEYS = ['input', 'sanitized', 'decoded', 'normalized', 'resolved'];
+const STAGE_IDS = ['none', 'raw', 'strip', 'decode', 'ext'];
+const DEFENSE_IDS = ['blacklist', 'normalizeCheck', 'allowlist'];
 
-// 出力に出す、途中経過の各段の見出し
-const STEP_LABEL = {
-  input: '入力', sanitized: 'フィルター通過後', decoded: 'URLデコード後', normalized: '正規化後', resolved: '取得パス',
-};
+// 言語をまたいで覚えておく「いまの状態」（切り替えたときに描き直すため）
+const view = { hintStage: null, lastInput: null };
 
-document.addEventListener('vfs:loaded', init);
-document.addEventListener('DOMContentLoaded', () => {
-  if (window.VFS) init();
+document.addEventListener('vfs:loaded', boot);
+document.addEventListener('DOMContentLoaded', boot);
+
+let booted = false;
+function boot() {
+  if (booted) return;
+  // 言語を決めて静的な文言を当てる
+  const lang = I18N.initialLanguage(location.search, I18N.readSaved(), navigator.languages);
+  I18N.use(lang, document);
   initTabs();
   initAccordions();
   initHelp();
-});
+  initLang();
+  if (window.VFS) {
+    booted = true;
+    initApp();
+  }
+}
 
-let inited = false;
-function init() {
-  if (inited || !window.VFS) return;
-  inited = true;
+function initLang() {
+  const btn = document.getElementById('lang-btn');
+  if (!btn || btn.dataset.wired) return;
+  btn.dataset.wired = '1';
+  btn.addEventListener('click', () => {
+    const next = M.getLanguage() === 'ja' ? 'en' : 'ja';
+    I18N.use(next, document);
+    I18N.save(next);
+    relabel();
+  });
+}
+
+// 言語を切り替えたとき、動的に作った部分（ヒント・対策の比較）を描き直す
+let relabel = () => {};
+
+function initApp() {
   const fileTreeEl = document.getElementById('file-tree');
   const stageSel = document.getElementById('stage');
   const modeSel = document.getElementById('mode');
@@ -60,6 +61,7 @@ function init() {
   const outputEl = document.getElementById('output');
   const logEl = document.getElementById('log');
   const badgeArea = document.getElementById('badge-area');
+  const defenseBody = document.getElementById('defense-body');
 
   function renderTree() {
     const keys = Object.keys(window.VFS).filter((k) => k.startsWith('/app/files/'));
@@ -78,10 +80,11 @@ function init() {
   }
   renderTree();
 
-  hintBtn.addEventListener('click', () => {
-    const h = STAGE_HINT[stageSel.value];
-    showHint(`【${h.title}】\n欠陥: ${h.flaw}\n\n${h.how}`);
-  });
+  function stageHint(stage) {
+    return t('hint.format', {
+      title: t(`hint.${stage}.title`), flaw: t(`hint.${stage}.flaw`), how: t(`hint.${stage}.how`),
+    });
+  }
 
   function showHint(msg) {
     const hintContent = document.createElement('div');
@@ -92,15 +95,23 @@ function init() {
     const closeBtn = document.createElement('button');
     closeBtn.type = 'button';
     closeBtn.className = 'hint-close-btn';
-    closeBtn.setAttribute('aria-label', 'ヒントを閉じる');
+    closeBtn.setAttribute('aria-label', t('ui.close'));
     closeBtn.textContent = '×';
     hintContent.appendChild(hintText);
     hintContent.appendChild(closeBtn);
     while (hintArea.firstChild) hintArea.removeChild(hintArea.firstChild);
     hintArea.appendChild(hintContent);
     hintArea.classList.remove('hidden');
-    closeBtn.addEventListener('click', () => hintArea.classList.add('hidden'));
+    closeBtn.addEventListener('click', () => {
+      hintArea.classList.add('hidden');
+      view.hintStage = null;
+    });
   }
+
+  hintBtn.addEventListener('click', () => {
+    view.hintStage = stageSel.value;
+    showHint(stageHint(stageSel.value));
+  });
 
   function log(msg) {
     const li = document.createElement('li');
@@ -108,21 +119,46 @@ function init() {
     logEl.prepend(li);
   }
 
-  function addBadge(text) {
+  function addBadge() {
     const b = document.createElement('span');
     b.className = 'flag-badge';
-    b.textContent = text;
+    b.textContent = t('badge.flag');
     badgeArea.appendChild(b);
   }
 
-  // 途中経過を <pre> に組み立てる（textContent のみ）
   function stepsText(steps) {
     const lines = [];
-    for (const key of Object.keys(STEP_LABEL)) {
+    for (const key of STEP_KEYS) {
       if (steps[key] === undefined) continue;
-      lines.push(`${STEP_LABEL[key]}: ${steps[key].replace(/\u0000/g, '\\0')}`);
+      lines.push(`${t(`step.${key}`)}: ${steps[key].replace(/\u0000/g, '\\0')}`);
     }
     return lines.join('\n');
+  }
+
+  function renderDefenses(userInput) {
+    const d = C.defenses(userInput, window.VFS);
+    while (defenseBody.firstChild) defenseBody.removeChild(defenseBody.firstChild);
+    for (const id of DEFENSE_IDS) {
+      const v = d[id];
+      const tr = document.createElement('tr');
+      const th = document.createElement('th');
+      th.setAttribute('scope', 'row');
+      th.textContent = t(`defense.${id}`);
+      const td = document.createElement('td');
+      if (v.allow && v.leak) {
+        td.textContent = t('defense.leak', { path: v.path });
+        tr.className = 'defense-leak';
+      } else if (v.allow) {
+        td.textContent = t('defense.allow', { path: v.path });
+        tr.className = 'defense-ok';
+      } else {
+        td.textContent = t('defense.block');
+        tr.className = 'defense-block';
+      }
+      tr.appendChild(th);
+      tr.appendChild(td);
+      defenseBody.appendChild(tr);
+    }
   }
 
   fetchBtn.addEventListener('click', () => {
@@ -130,35 +166,43 @@ function init() {
     const stage = stageSel.value;
     const mode = modeSel.value;
     if (!userInput) {
-      outputEl.textContent = '// パスを入力してください';
+      outputEl.textContent = t('out.empty');
       return;
     }
+    view.lastInput = userInput;
+    renderDefenses(userInput);
     const r = C.resolve(userInput, stage, mode, window.VFS);
 
     if (r.blocked) {
-      outputEl.textContent = `// フィルター「${STAGE_HINT[stage].title}」でブロックされました\n\n入力: ${userInput}`;
-      log(`ブロック: ${userInput}（フィルター=${stage}）`);
+      outputEl.textContent = t('out.blocked', { title: t(`hint.${stage}.title`), input: userInput });
+      log(t('log.blocked', { input: userInput, stage }));
       return;
     }
     const trace = stepsText(r.steps);
     if (r.ok) {
       const body = String(r.content).replace(/\\n/g, '\n');
       outputEl.textContent = `// path: ${r.path}\n${trace}\n\n${body}`;
-      log(`取得: ${r.path}（モード=${mode}, フィルター=${stage}）`);
-      if (r.flag) addBadge('FLAG FOUND');
+      log(t('log.fetched', { path: r.path, mode, stage }));
+      if (r.flag) addBadge();
     } else if (r.error === 'denied') {
-      outputEl.textContent = `// アクセス拒否: base の外です（safe モード）\n${trace}`;
-      log(`拒否: ${r.path}（safe モード）`);
+      outputEl.textContent = t('out.denied', { trace });
+      log(t('log.denied', { path: r.path }));
     } else {
-      outputEl.textContent = `// ファイルが見つかりません\n${trace}`;
-      log(`未検出: ${r.path}（入力=${userInput}）`);
+      outputEl.textContent = t('out.notfound', { trace });
+      log(t('log.notfound', { path: r.path, input: userInput }));
     }
   });
 
   fileTreeEl.addEventListener('dblclick', (e) => {
-    const t = e.target;
-    if (t && t.textContent) pathInput.value = t.textContent.trim();
+    const target = e.target;
+    if (target && target.textContent) pathInput.value = target.textContent.trim();
   });
+
+  // 言語の切り替え時に、出ているヒントと対策の比較を描き直す
+  relabel = () => {
+    if (view.hintStage && !hintArea.classList.contains('hidden')) showHint(stageHint(view.hintStage));
+    if (view.lastInput) renderDefenses(view.lastInput);
+  };
 }
 
 // タブ
@@ -166,6 +210,8 @@ function initTabs() {
   const tabButtons = document.querySelectorAll('.tab-button');
   const tabContents = document.querySelectorAll('.tab-content');
   tabButtons.forEach((button) => {
+    if (button.dataset.wired) return;
+    button.dataset.wired = '1';
     button.addEventListener('click', () => {
       const targetTab = button.dataset.tab;
       tabButtons.forEach((btn) => btn.classList.remove('active'));
@@ -180,6 +226,8 @@ function initTabs() {
 function initAccordions() {
   const headers = document.querySelectorAll('.accordion-header');
   headers.forEach((header) => {
+    if (header.dataset.wired) return;
+    header.dataset.wired = '1';
     header.addEventListener('click', () => {
       const content = header.nextElementSibling;
       const isActive = header.classList.contains('active');
@@ -204,6 +252,8 @@ function initAccordions() {
 function initHelp() {
   const helpBtn = document.getElementById('help-btn');
   const helpModal = document.getElementById('help-modal');
+  if (!helpBtn || helpBtn.dataset.wired) return;
+  helpBtn.dataset.wired = '1';
   const helpClose = helpModal.querySelector('.help-close');
   helpBtn.addEventListener('click', () => {
     helpModal.classList.remove('hidden');
