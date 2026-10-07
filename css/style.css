@@ -36,7 +36,7 @@ header .lead{margin:8px 0 0;color:var(--text-secondary);font-size:1rem;line-heig
 
 .file-tree{font-family:'Consolas','Monaco','Courier New',monospace;background:#f8fafc;padding:12px;border-radius:6px;min-height:150px;max-height:200px;overflow:auto;border:1px solid var(--border);font-size:0.9rem}
 .input-row{display:flex;gap:8px;margin-bottom:12px}
-.input-row input{flex:1;padding:12px;border-radius:6px;border:1px solid var(--border);font-family:'Consolas','Monaco','Courier New',monospace;font-size:0.95rem;transition:var(--transition)}
+.input-row input{flex:1;padding:12px;border-radius:6px;border:1px solid var(--border);font-family:'Consolas','Monaco','Courier New',monospace;font-size:16px;transition:var(--transition)}
 .input-row input:focus{outline:none;border-color:var(--accent);box-shadow:0 0 0 3px rgb(37 99 235 / 0.1)}
 .btn{padding:10px 16px;border-radius:6px;border:1px solid var(--border);background:#fff;cursor:pointer;font-size:0.95rem;font-weight:500;transition:var(--transition)}
 .btn:hover{background:#f8fafc;transform:translateY(-1px);box-shadow:var(--shadow-sm)}
@@ -64,9 +64,10 @@ header .lead{margin:8px 0 0;color:var(--text-secondary);font-size:1rem;line-heig
   font-size: 18px;
   font-weight: bold;
   cursor: pointer;
-  padding: 0;
-  width: 20px;
-  height: 20px;
+  padding: 12px;
+  margin: -12px -12px -12px 0;
+  min-width: 44px;
+  min-height: 44px;
   display: flex;
   align-items: center;
   justify-content: center;
@@ -89,6 +90,7 @@ header .lead{margin:8px 0 0;color:var(--text-secondary);font-size:1rem;line-heig
 .meta{display:flex;flex-wrap:wrap;gap:8px;margin-top:10px;align-items:center}
 .meta label{font-size:.9rem;color:var(--muted)}
 .badge-area{margin-top:12px}
+.flag-badge{display:inline-block;padding:6px 10px;margin-right:8px;background:#dcfce7;color:#166534;border:1px solid #16a34a;border-radius:6px;font-family:'Consolas','Monaco','Courier New',monospace;font-weight:600}
 
 footer{max-width:1100px;margin:40px auto 0;padding:24px 16px 40px;text-align:center;border-top:1px solid var(--border)}
 footer .footer{color:var(--text-secondary);font-size:1rem;line-height:1.6}

@@ -40,45 +40,37 @@
       </div>
 
       <div class="help-section">
-        <h3>🔍 攻撃体験の手順</h3>
+        <h3>🔍 フィルターと、それを破る手法</h3>
+        <p>フィルターごとに欠陥があり、破る手法が1つ対応します。目標はいつも <code>/secrets/flag.txt</code> を取ることです。</p>
 
-        <h4>1. Beginner モード（初級）</h4>
+        <h4>1. なし（フィルターなし）</h4>
         <ul>
-          <li>フィルターなし、すべての攻撃手法が使える</li>
-          <li>基本的な入力例：
-            <ul>
-              <li><code>../../secrets/flag.txt</code> - フラグファイルへ</li>
-              <li><code>../../etc/passwd</code> - システムファイルへ</li>
-              <li><code>/robots.txt</code> - 機密パス情報の探索</li>
-            </ul>
-          </li>
-          <li>高度な手法も練習可能：URLエンコード、ダブルスラッシュ等</li>
+          <li>そのまま上に戻れます。例: <code>../../secrets/flag.txt</code></li>
+          <li>まず <code>/robots.txt</code> で機密パスのヒントを探すのも手です</li>
         </ul>
 
-        <h4>2. Intermediate モード（中級）</h4>
+        <h4>2. 生の「..」を弾く</h4>
         <ul>
-          <li>生の入力で <code>..</code> をブロック（URLデコード前チェック）</li>
-          <li>動作する回避テクニック：
-            <ul>
-              <li>部分エンコード: <code>%2e%2e/%2e%2e/etc/passwd</code></li>
-              <li>完全エンコード: <code>%2e%2e%2f%2e%2e%2fsecrets%2fflag.txt</code></li>
-              <li>高度な手法: ダブルスラッシュ、混合エンコードなど</li>
-            </ul>
-          </li>
+          <li>欠陥: デコードする前の入力しか見ないので、エンコードされた <code>..</code> を見逃します</li>
+          <li>破る手法（URLエンコード）: <code>%2e%2e/%2e%2e/secrets/flag.txt</code></li>
         </ul>
 
-        <h4>3. Advanced モード（上級）</h4>
+        <h4>3. 「../」を消す</h4>
         <ul>
-          <li>高度なフィルター：URLデコード後の検証を実装</li>
-          <li>動作する回避手法（意図的な穴）：
-            <ul>
-              <li>ダブルスラッシュ: <code>..//..//etc/passwd</code></li>
-              <li>混合パターン: <code>..././..././etc/passwd</code></li>
-              <li>混合エンコード: <code>..%2f..%2fetc%2fpasswd</code></li>
-              <li>Null文字: <code>../../etc/passwd%00.txt</code></li>
-            </ul>
-          </li>
-          <li>ブラックリストの限界を学習</li>
+          <li>欠陥: <code>../</code> を消したあと、結果を見直しません</li>
+          <li>破る手法（入れ子）: <code>....//....//secrets/flag.txt</code>（内側を消すと <code>../../</code> が組み上がる）</li>
+        </ul>
+
+        <h4>4. デコードして「..」を弾く</h4>
+        <ul>
+          <li>欠陥: 1回だけデコードして確認し、その後もう1回デコードされます</li>
+          <li>破る手法（二重エンコード）: <code>%252e%252e%252f%252e%252e%252fsecrets%252fflag.txt</code></li>
+        </ul>
+
+        <h4>5. 拡張子チェック（画像だけ）</h4>
+        <ul>
+          <li>欠陥: 末尾の拡張子だけ見て許可し、取得は <code>\0</code>（ヌルバイト）で切ります</li>
+          <li>破る手法（ヌルバイト）: <code>../../secrets/flag.txt%00.png</code>（拡張子は <code>.png</code> で通り、取得は <code>flag.txt</code>）</li>
         </ul>
       </div>
 
@@ -105,8 +97,8 @@
         <h3>📚 詳細ドキュメント</h3>
         <p>より詳しい使い方や技術情報は以下を参照：</p>
         <ul>
-          <li><a href="https://github.com/ipusiron/path-escape#readme" target="_blank">README（GitHub）</a></li>
-          <li><a href="https://github.com/ipusiron/path-escape/blob/main/docs/threat-model.md" target="_blank">脅威モデルと技術解説</a></li>
+          <li><a href="https://github.com/ipusiron/path-escape#readme" target="_blank" rel="noopener noreferrer">README（GitHub）</a></li>
+          <li><a href="https://github.com/ipusiron/path-escape/blob/main/docs/threat-model.md" target="_blank" rel="noopener noreferrer">脅威モデルと技術解説</a></li>
         </ul>
       </div>
     </div>
@@ -123,11 +115,13 @@
         <div class="attack-controls">
           <div class="control-row">
             <div class="stage-controls">
-              <label for="stage">ステージ:</label>
+              <label for="stage">フィルター:</label>
               <select id="stage">
-                <option value="beginner">Beginner</option>
-                <option value="intermediate">Intermediate</option>
-                <option value="advanced">Advanced</option>
+                <option value="none">なし（フィルターなし）</option>
+                <option value="raw">生の「..」を弾く</option>
+                <option value="strip">「../」を消す</option>
+                <option value="decode">デコードして「..」を弾く</option>
+                <option value="ext">拡張子チェック（画像だけ）</option>
               </select>
             </div>
             <div class="mode-controls">
@@ -154,7 +148,7 @@
                 <button id="fetch-btn" class="btn primary">Fetch</button>
               </div>
               <div class="info">
-                <p><strong>Tips:</strong> Beginer モードではヒントが使えます。Intermediate/Advanced では入力フィルターが働きます。</p>
+                <p><strong>ヒント:</strong> フィルターごとに、それを破る手法が違います。「ヒントを表示」で、いま選んでいるフィルターの欠陥と効く手法がわかります。</p>
               </div>
               <div id="hint-area" class="hint hidden"></div>
             </div>
@@ -460,8 +454,8 @@ def get_file_safely(base_dir, file_name):
     </div>
   </footer>
 
+  <script src="js/pe-core.js"></script>
   <script src="js/vfs-loader.js"></script>
-  <script src="js/normalize.js"></script>
   <script src="js/script.js"></script>
 </body>
 </html>
