@@ -110,6 +110,31 @@ test('VFS にフラグと公開ファイルがある。中身に FLAG{ が含ま
   assert.ok(vfs['/app/files/readme.md'] && vfs['/app/files/public.txt']);
 });
 
+test('対策の比較: 正規のファイルは3つとも許可、ブラックリストは入れ子・符号化で base の外へ漏れる', () => {
+  // 正規のファイル: 3つの対策とも許可
+  for (const input of ['/app/files/readme.md', 'readme.md', '/app/files/public.txt']) {
+    const d = C.defenses(input, vfs);
+    assert.ok(d.blacklist.allow && d.normalizeCheck.allow && d.allowlist.allow, input);
+    assert.ok(!d.blacklist.leak, input);
+  }
+  // 入れ子・符号化: ブラックリストは漏れる（allow かつ leak）、正規化後チェックと許可リストは止める
+  for (const input of ['....//....//secrets/flag.txt', '%2e%2e/%2e%2e/secrets/flag.txt']) {
+    const d = C.defenses(input, vfs);
+    assert.ok(d.blacklist.allow && d.blacklist.leak, `${input}: blacklist が漏れるべき`);
+    assert.equal(d.blacklist.path, '/secrets/flag.txt', input);
+    assert.ok(!d.normalizeCheck.allow, `${input}: 正規化後チェックは止める`);
+    assert.ok(!d.allowlist.allow, `${input}: 許可リストは止める`);
+  }
+  // 正規化後チェック・許可リストは、どの手法でもフラグに届かせない
+  for (const input of ['../../secrets/flag.txt', '....//....//secrets/flag.txt',
+    '%252e%252e%252f%252e%252e%252fsecrets%252fflag.txt', '../../secrets/flag.txt%00.png']) {
+    const d = C.defenses(input, vfs);
+    assert.ok(!(d.normalizeCheck.allow && d.normalizeCheck.path === '/secrets/flag.txt'), `${input}: normalizeCheck`);
+    assert.ok(!(d.allowlist.allow && d.allowlist.path === '/secrets/flag.txt'), `${input}: allowlist`);
+  }
+  assert.deepEqual(C.ALLOWLIST, ['/app/files/readme.md', '/app/files/public.txt']);
+});
+
 test('pe-core.js に innerHTML などの危険な書き込みがない', () => {
   const src = read('js/pe-core.js');
   assert.doesNotMatch(src, /innerHTML|outerHTML|document\.write|eval\(|new Function/);
