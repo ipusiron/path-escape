@@ -232,12 +232,11 @@ C:\windows\system32\config\sam</pre>
               </div>
               <p>相対パスではなく、絶対パスを直接指定する手法です。</p>
 
-              <h4>5. ダブルスラッシュ</h4>
+              <h4>5. 入れ子（ダブルスラッシュ）</h4>
               <div class="code-example">
-                <pre>....//....//etc/passwd
-..././..././etc/passwd</pre>
+                <pre>....//....//etc/passwd</pre>
               </div>
-              <p>単純な文字列置換を回避するテクニックです。</p>
+              <p><code>../</code> を1回だけ文字列置換で消すフィルターを破ります。内側の <code>../</code> を消すと、外側の文字から <code>../</code> が組み上がります。スタック方式で正規化するフィルターには効きません（このツールの「<code>../</code> を消す」フィルターで試せます）。</p>
             </div>
           </div>
 
@@ -247,26 +246,19 @@ C:\windows\system32\config\sam</pre>
               <span class="accordion-icon">▼</span>
             </button>
             <div class="accordion-content">
-              <h4>CVE-2021-41773 - Apache HTTP Server 2.4.49</h4>
-              <p>2021年10月に発見されたApache HTTP Serverの重大な脆弱性。パストラバーサルとリモートコード実行が可能でした。</p>
+              <h4>CVE-2021-41773 — Apache HTTP Server 2.4.49</h4>
+              <p>2021年10月、2.4.49で入ったパスの正規化の不備。Aliasの外のファイルを読め、CGIが有効だとリモートコード実行につながりました。発見時点ですでに攻撃に使われていました。URLエンコードした <code>.%2e/</code> で <code>../</code> を作る形が使われました。</p>
               <div class="code-example">
                 <pre>curl 'http://target/cgi-bin/.%2e/.%2e/.%2e/.%2e/etc/passwd'</pre>
               </div>
 
-              <h4>CVE-2018-11776 - Apache Struts 2</h4>
-              <p>名前空間の値が適切に検証されず、リモートコード実行に繋がる脆弱性。多くの企業システムが影響を受けました。</p>
+              <h4>CVE-2021-42013 — 2.4.50の修正が不完全だった</h4>
+              <p>41773を直した2.4.50の修正が不十分で、数日後に別の形で再び破られました（2.4.49・2.4.50が対象、2.4.51で修正）。ランサムウェアの攻撃にも使われました。<strong>「1回ふさいでも、エンコードの入れ子で抜けられる」</strong>という、このツールのフィルターが見せる話そのものです。</p>
 
-              <h4>CVE-2020-5410 - Spring Cloud Config</h4>
-              <p>Spring Cloud Config Serverにおいて、特定の設定下でディレクトリートラバーサルが可能な脆弱性。設定ファイルの漏洩リスクがありました。</p>
+              <h4>CVE-2020-5410 — Spring Cloud Config Server</h4>
+              <p>2020年、設定を配る Spring Cloud Config Server で、特別に細工したGETリクエストから任意のファイルを読めるディレクトリートラバーサル。CISAの「悪用が確認された脆弱性」に載りました。</p>
 
-              <h4>その他の影響</h4>
-              <ul>
-                <li>2010年 - Citrix製品での大規模な情報漏洩</li>
-                <li>2019年 - 複数のIoTデバイスで設定ファイル露出</li>
-                <li>2020年 - Zoomクライアントでの任意ファイル読み取り</li>
-              </ul>
-
-              <p class="warning">これらの事例は、適切な入力検証とパス正規化の重要性を示しています。</p>
+              <p class="warning">これらは、入力の検証とパスの正規化の大切さと、「修正が不完全だと再び破られる」ことを示しています。</p>
             </div>
           </div>
 
@@ -291,7 +283,7 @@ C:\windows\system32\config\sam</pre>
 
               <h4>攻撃者の思考プロセス</h4>
               <ol>
-                <li><strong>偵察</strong>：エラーメッセージやURLパラメータを観察</li>
+                <li><strong>偵察</strong>：エラーメッセージやURLパラメーターを観察</li>
                 <li><strong>仮説</strong>：「ファイルパスを受け取っているようだ」</li>
                 <li><strong>実験</strong>：<code>../</code>を追加してみる</li>
                 <li><strong>確認</strong>：エラーメッセージが変わった？別のファイルが見えた？</li>
@@ -346,7 +338,7 @@ if (!ALLOWED_FILES.includes(requestedFile)) {
 }</pre>
               </div>
 
-              <h4>3. chroot/コンテナによる隔離</h4>
+              <h4>3. chroot/コンテナーによる隔離</h4>
               <div class="code-example">
                 <pre># Docker の例
 FROM node:14-alpine
@@ -420,9 +412,9 @@ def get_file_safely(base_dir, file_name):
 
               <h5>動的解析ツール</h5>
               <ul>
-                <li>OWASP ZAP - 無料のWebアプリケーションセキュリティスキャナ</li>
+                <li>OWASP ZAP - 無料のWebアプリケーションセキュリティスキャナー</li>
                 <li>Burp Suite - プロフェッショナル向けテストツール</li>
-                <li>Acunetix - 自動脆弱性スキャナ</li>
+                <li>Acunetix - 自動脆弱性スキャナー</li>
               </ul>
 
               <h5>WAF (Web Application Firewall)</h5>

@@ -1,5 +1,5 @@
 // script.js — 画面の処理だけ。
-// 依存: window.VFS（vfs-loader.js）、window.PathEscapeCore（pe-core.js）。
+// 依存: window.VFS（vfs-data.js）、window.PathEscapeCore（pe-core.js）。
 // パスの解決・フィルターの判定は PathEscapeCore.resolve() に任せる。
 
 const C = window.PathEscapeCore;
