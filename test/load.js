@@ -15,4 +15,4 @@ export function load(file) {
 }
 
 export const core = () => load('js/pe-core.js').PathEscapeCore;
-export const VFS = () => JSON.parse(read('data/vfs.json'));
+export const VFS = () => load('js/vfs-data.js').VFS;
