@@ -166,6 +166,22 @@
             </div>
           </div>
         </div>
+
+        <div class="pane defense-pane">
+          <h3>この入力を3つの対策に通すと</h3>
+          <p class="note">フィルター（上のフィルター欄）とは別に、同じ入力を代表的な3つの対策に通した結果です。Fetch を押すと更新されます。</p>
+          <div class="table-wrap">
+            <table class="defense-table">
+              <thead>
+                <tr><th scope="col">対策</th><th scope="col">結果</th></tr>
+              </thead>
+              <tbody id="defense-body">
+                <tr><td colspan="2">パスを入力して Fetch を押すと、各対策の結果が出ます。</td></tr>
+              </tbody>
+            </table>
+          </div>
+          <p class="note">ブラックリスト（<code>../</code> を消す）は、入れ子や符号化で <code>/app/files/</code> の外のファイルが漏れることがあります。正規化してから base を確かめる方法と、許可リストは、どの手法でも止めます。</p>
+        </div>
       </div>
     </div>
 

@@ -125,6 +125,39 @@ function init() {
     return lines.join('\n');
   }
 
+  // 対策の比較（この入力を3つの対策に通すと）
+  const defenseBody = document.getElementById('defense-body');
+  const DEFENSE_LABEL = {
+    blacklist: 'ブラックリスト（../ を消す）',
+    normalizeCheck: '正規化してから base チェック',
+    allowlist: '許可リスト',
+  };
+  function renderDefenses(userInput) {
+    const d = C.defenses(userInput, window.VFS);
+    while (defenseBody.firstChild) defenseBody.removeChild(defenseBody.firstChild);
+    for (const id of ['blacklist', 'normalizeCheck', 'allowlist']) {
+      const v = d[id];
+      const tr = document.createElement('tr');
+      const th = document.createElement('th');
+      th.setAttribute('scope', 'row');
+      th.textContent = DEFENSE_LABEL[id];
+      const td = document.createElement('td');
+      if (v.allow && v.leak) {
+        td.textContent = `漏れる: ${v.path} を返した（base の外）`;
+        tr.className = 'defense-leak';
+      } else if (v.allow) {
+        td.textContent = `許可: ${v.path}`;
+        tr.className = 'defense-ok';
+      } else {
+        td.textContent = '拒否';
+        tr.className = 'defense-block';
+      }
+      tr.appendChild(th);
+      tr.appendChild(td);
+      defenseBody.appendChild(tr);
+    }
+  }
+
   fetchBtn.addEventListener('click', () => {
     const userInput = pathInput.value.trim();
     const stage = stageSel.value;
@@ -133,6 +166,7 @@ function init() {
       outputEl.textContent = '// パスを入力してください';
       return;
     }
+    renderDefenses(userInput);
     const r = C.resolve(userInput, stage, mode, window.VFS);
 
     if (r.blocked) {

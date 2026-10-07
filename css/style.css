@@ -610,3 +610,14 @@ footer a:hover{color:var(--accent-hover);text-decoration:underline}
     padding: 24px;
   }
 }
+
+/* 対策の比較 */
+.defense-pane{margin-top:20px}
+.table-wrap{overflow-x:auto}
+.defense-table{width:100%;border-collapse:collapse;font-size:0.95rem}
+.defense-table th,.defense-table td{text-align:left;padding:10px 12px;border-bottom:1px solid var(--border);vertical-align:top;overflow-wrap:anywhere}
+.defense-table thead th{background:#f8fafc;font-weight:600}
+.defense-table th[scope="row"]{font-weight:500;min-width:0}
+.defense-table tr.defense-leak td{color:#b91c1c;font-weight:600}
+.defense-table tr.defense-ok td{color:#166534}
+.defense-table tr.defense-block td{color:var(--text-secondary)}
