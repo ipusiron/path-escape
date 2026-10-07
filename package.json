@@ -1,0 +1,11 @@
+{
+  "name": "path-escape",
+  "version": "1.0.0",
+  "description": "PathEscape — directory traversal learning tool",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "test": "node --test"
+  },
+  "license": "MIT"
+}
