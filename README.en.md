@@ -183,6 +183,12 @@ The tool reproduces behavior **close to a real web server**.
 
 ## 🎯 Use cases
 
+Ways of using this tool in particular
+
+- Confirming that the right fix is to canonicalize and then check it is under the base (defense-design classes): `../../secrets/flag.txt` reaches `/secrets/flag.txt` and reads the flag in vulnerable mode with no defense (none). Switch the same input to safe mode and, after canonicalizing the path, it checks whether it is under the base folder `/app/files/` and denies a result that escapes outside. You can confirm, with the same input, that the right fix is to canonicalize and then check the base, not to keep a blocklist
+- Confirming that naive character removal can be bypassed (pitfalls-of-defense classes): give `....//....//secrets/flag.txt` to a defense that only removes `../` (strip), and what is left after removing `../` turns back into `../` and reaches the flag. You can confirm that a defense which only deletes a dangerous sequence as a string is broken by a doubled-up spelling
+- Confirming that a null byte bypasses the extension check (input-truncation classes): give `../../secrets/flag.txt%00.png` to a defense that requires an image extension (ext), and everything after the null byte (%00) is cut off, so the remaining `flag.txt` reaches the flag. You can confirm that a check that looks only at the suffix is broken by a separator in the middle
+
 ### Scenario 1: Security training
 **Audience**: security training for new hires or a development team
 
